@@ -4,6 +4,7 @@ NULL
 
 #' @importFrom utils data
 #' @importFrom stats approx
+#' @importFrom stats acf
 #' @importFrom graphics plot
 #' @importFrom graphics abline
 #' @importFrom mvtnorm rmvnorm
@@ -12,31 +13,40 @@ NULL
 SNSeg_Uni_single_para <- function(ts, type = "mean", confidence = 0.9,
                       grid_size_scale = 0.05, grid_size = NULL,
                       plot_SN = TRUE, est_cp_loc = TRUE){
-  if(is.null(ts))
-    {stop("Input of ts is missing!")}
-  if(!((type %in% c("mean","variance","acf","bivcor")) | ((type>=0)&(type<=1)) )){
-    stop("paras_to_test must come from one of the categories: mean, variance, acf,
-         bivcor, or a percentage between 0 and 1!")}
+  if(is.null(ts)){stop("Input of ts is missing!")}
+
   if(!(confidence %in% c(0.9,0.95,0.99,0.995,0.999))){
     stop("Confidence must be one of 0.9, 0.95, 0.99, 0.995 and 0.999!")
   }
 
-  if((type %in% c("mean","variance","acf")) | (inherits(type,'numeric'))){
+  if(!inherits(type, 'function')){
+    if(!((type %in% c("mean","variance","acf","bivcor")) | ((type>=0)&(type<=1)))){
+      stop("paras_to_test must come from one of the categories: mean, variance, acf,
+         bivcor, a percentage between 0 and 1! To test the change in a general functional,
+         paras_to_test must be a function that returns a numeric value!")}
+
+    if((type %in% c("mean","variance","acf")) | (inherits(type,'numeric'))){
+      if(!inherits(ts, 'numeric')){
+        stop("ts must be numeric!")
+      }
+      n <- length(ts)
+    }
+    if(type == "bivcor"){
+      if(!inherits(ts,'matrix')){
+        stop("ts must be a matrix!")
+      }
+      if(!((dim(ts)[1] == 2) | (dim(ts)[2] == 2))){
+        stop("ts must be 2-dimensional!")
+      }
+
+      if(dim(ts)[2] == 2) {ts <- t(ts)}
+      n <- dim(ts)[2]
+    }
+  } else{
     if(!inherits(ts, 'numeric')){
       stop("ts must be numeric!")
     }
     n <- length(ts)
-  }
-  if(type == "bivcor"){
-    if(!inherits(ts,'matrix')){
-      stop("ts must be a matrix!")
-    }
-    if(!((dim(ts)[1] == 2) | (dim(ts)[2] == 2))){
-      stop("ts must be 2-dimensional!")
-    }
-
-    if(dim(ts)[2] == 2) {ts <- t(ts)}
-    n <- dim(ts)[2]
   }
 
   critical_values_single <- SNSeg::critical_values_single
@@ -108,98 +118,105 @@ SNSeg_Uni_single_para <- function(ts, type = "mean", confidence = 0.9,
     }
   }
 
-  # Mean
-  if(type == "mean"){
+  if(!inherits(type, 'function')){
+    # Mean
+    if(type == "mean"){
 
-    # SN change points estimate
-    SN_sweep_result <- SN_sweep_mean(ts, grid_size)
+      # SN change points estimate
+      SN_sweep_result <- SN_sweep_mean(ts, grid_size)
+      SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
+
+      if(plot_SN){
+        plot(ts, xlab = "Time", ylab = "Value",
+             main="SN Segmentation plot for Univariate Mean")
+        if(est_cp_loc){
+          abline(v = SN_result, col = 'red')
+        }
+      }
+    } else if (type == "variance"){ # Variance
+
+      # SN change points estimate
+      SN_sweep_result <- SN_sweep_variance(ts, grid_size)
+      SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
+
+      if(plot_SN){
+        plot(ts, xlab = "Time", ylab = "Value",
+             main="SN Segmentation plot for Univariate Variance")
+        if(est_cp_loc){
+          abline(v = SN_result, col = 'red')
+        }
+      }
+    }  else if(type == "acf"){ # ACF
+
+      # SN change points estimate
+      SN_sweep_result <- SN_sweep_acf(ts, grid_size)
+      SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
+
+      if(plot_SN){
+        plot(ts, xlab = "Time", ylab = "Value",
+             main="SN Segmentation plot for Univariate ACF")
+        if(est_cp_loc){
+          abline(v = SN_result, col = 'red')
+        }
+      }
+    } else if(type == "bivcor"){ # bivariate correlation
+
+      # SN change points estimate
+      SN_sweep_result <- SN_sweep_bivcor(ts, grid_size)
+      SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
+
+      if(plot_SN){
+        oldpar <- par(no.readonly = TRUE)
+        on.exit(par(oldpar))
+
+        par(mfrow=c(1,2))
+        plot(ts[1,], xlab = "Time", ylab = "Value",
+             main="SN Segmentation plot for Bivariate Correlation")
+        if(est_cp_loc){
+          abline(v = SN_result, col = 'red')
+        }
+        plot(ts[2,], xlab = "Time", ylab = "Value",
+             main="SN Segmentation plot for Bivariate Correlation")
+        if(est_cp_loc){
+          abline(v = SN_result, col = 'red')
+        }
+      }
+    } else if(inherits(type, 'numeric')){ # Quantile
+      quantile_level <- type
+
+      # SN change points estimate
+      SN_sweep_result <- SN_sweep_quantile(ts, grid_size, quantile_level)
+      SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
+
+      if(plot_SN){
+        plot(ts, xlab = "Time", ylab = "Value",
+             main=paste0("SN Segmentation plot for Multi-Parameters",quantile_level*100,"th Quantile"))
+        if(est_cp_loc){
+          abline(v = SN_result, col = 'red')
+        }
+      }
+    }
+  }else{
+    # SNCP for general functionals
+    SN_sweep_result <- SN_sweep_general(ts, grid_size, functional = type)
     SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
 
     if(plot_SN){
       plot(ts, xlab = "Time", ylab = "Value",
-           main="SN Segmentation plot for Univariate Mean")
+           main="SN Segmentation plot for General Type of Change")
       if(est_cp_loc){
         abline(v = SN_result, col = 'red')
       }
     }
   }
 
-  # Variance
-  else if (type == "variance"){
-
-    # SN change points estimate
-    SN_sweep_result <- SN_sweep_variance(ts, grid_size)
-    SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
-
-    if(plot_SN){
-      plot(ts, xlab = "Time", ylab = "Value",
-           main="SN Segmentation plot for Univariate Variance")
-      if(est_cp_loc){
-        abline(v = SN_result, col = 'red')
-      }
-    }
-  }
-
-  # ACF
-  else if(type == "acf"){
-
-    # SN change points estimate
-    SN_sweep_result <- SN_sweep_acf(ts, grid_size)
-    SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
-
-    if(plot_SN){
-      plot(ts, xlab = "Time", ylab = "Value",
-           main="SN Segmentation plot for Univariate ACF")
-      if(est_cp_loc){
-        abline(v = SN_result, col = 'red')
-      }
-    }
-  }
-
-  # bivariate correlation
-  else if(type == "bivcor"){
-
-    # SN change points estimate
-    SN_sweep_result <- SN_sweep_bivcor(ts, grid_size)
-    SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
-
-    if(plot_SN){
-      oldpar <- par(no.readonly = TRUE)
-      on.exit(par(oldpar))
-
-      par(mfrow=c(1,2))
-      plot(ts[1,], xlab = "Time", ylab = "Value",
-           main="SN Segmentation plot for Bivariate Correlation")
-      if(est_cp_loc){
-        abline(v = SN_result, col = 'red')
-      }
-      plot(ts[2,], xlab = "Time", ylab = "Value",
-           main="SN Segmentation plot for Bivariate Correlation")
-      if(est_cp_loc){
-        abline(v = SN_result, col = 'red')
-      }
-    }
-  }
-
-  # Quantile
-  else if(inherits(type, 'numeric')){
-    quantile_level <- type
-    type <- paste(quantile_level*100, '% quantile', sep = '')
-
-    # SN change points estimate
-    SN_sweep_result <- SN_sweep_quantile(ts, grid_size, quantile_level)
-    SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
-
-    if(plot_SN){
-      plot(ts, xlab = "Time", ylab = "Value",
-           main=paste0("SN Segmentation plot for ",quantile_level*100,"th Quantile"))
-      if(est_cp_loc){
-        abline(v = SN_result, col = 'red')
-      }
-    }
-  }
-  return(list("paras_to_test" = type, "grid_size" = grid_size,
-              "SN_sweep_result" = SN_sweep_result, "est_cp" = SN_result,
-              "confidence" = confidence, "critical_value" = critical_value))
+  final_result <- structure(
+    list(
+      ts = ts, paras_to_test = type, grid_size = grid_size,
+      SN_sweep_result = SN_sweep_result, est_cp = SN_result,
+      confidence = confidence, critical_value = critical_value
+    ), class = 'SNSeg_Uni'
+  )
+  final_result
 }
 

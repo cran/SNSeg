@@ -6,8 +6,11 @@
 #' \code{critical_values_multi} and \code{critical_values_HD}) were attached.
 #' Functions \code{MAR}, \code{MAR_Variance} and \code{MAR_MTS_Covariance} can be utilized
 #' to generate time series data that are used for the functions \code{SNSeg_Uni}, \code{SNSeg_Multi} and \code{SNSeg_HD}.
-#' The function \code{max_SNsweep} enables users to compute the SN test
-#' statistic and make the segmentation plot for these statistics.
+#' S3 methods plot(), print() and summary() are available for class "SNSeg_Uni",
+#' "SNSeg_Multi" and "SNSeh_HD" objects. The function \code{max_SNsweep} enables users
+#' to compute the SN test statistic and make the segmentation plot for these
+#' statistics. The function \code{SNSeh_estimate} allows users to compute parameter
+#' estimates of each segment that is separated by estimated change-points.
 #'
 #' @section SNSeg_Uni:
 #' \code{SNSeg_Uni} provides SN-based change point estimates for a univariate
@@ -15,20 +18,39 @@
 #'
 #' For the parameters of the SN test, the function
 #' \code{SNSeg_Uni} offers mean, variance, acf, bivariate
-#' correlation and numeric quantiles as available options. To visualize the
-#' estimated change points, users can set "plot_SN = TRUE" and "est_cp_loc = TRUE"
+#' correlation and numeric quantiles as available options. It also allows users
+#' to enter their own defined function as the input parameter. Besides, users can
+#' use a composite set of parameters including one or more from the mean, variance,
+#' acf or numeric quantiles quantile. To visualize the estimated change points,
+#' users can set "plot_SN = TRUE" and "est_cp_loc = TRUE"
 #' to generate the time series segmentation plot. The output comprises of the
-#' parameter(s), the window size, and the estimated change point locations.
+#' parameter(s), the window size, and the estimated change point locations. The
+#' function returns an S3 object of class "SNSeg_Uni", which can be applied to
+#' S3 methods plot(), print() and summary().
 #'
 #' @section SNSeg_Multi:
 #' \code{SNSeg_Multi} provides SN-based change point estimates for multivariate
-#' time series based on changes in multivariate means or covariance matrix.
-#' Different from the function \code{SNSeg_Uni}, \code{SNSeg_Multi} does not
-#' contain the option to generate the time series segmentation plot.
+#' time series based on changes in multivariate means or covariance matrix. The
+#' "plot_SN = TRUE" option allows users to plot each individual time series and
+#' the estimated change=points. The  function returns an S3 object of class
+#' "SNSeg_Multi", which can be applied to S3 methods plot(), print() and summary().
 #'
 #' @section SNSeg_HD:
 #' \code{SNSeg_HD} provides SN-based change point estimates for a
-#' high-dimensional time series based on changes in high-dimensional means.
+#' high-dimensional time series based on changes in high-dimensional means. The
+#' "plot_SN = TRUE" option allows users to plot each individual time series and
+#' the estimated change=points. The input argument "n_plot" enables users to plot
+#' the first "n_plot" number of time series. The function returns an S3 object of
+#' class "SNSeg_HD", which can be applied to S3 methods plot(), print() and
+#' summary().
+#'
+#' @section max_SNsweep:
+#' \code{max_SNsweep} provides SN based test statistic of each time point and
+#' generates a plot for these statistics and the estimated change-points.
+#'
+#' @section SNSeg_estimate:
+#' \code{SNSeg_estimate} computes the parameter estimates of each segment separated
+#' by the estimated change-points.
 #'
 #' @section critical values table:
 #' The package \code{SNSeg} provides three critical values table.

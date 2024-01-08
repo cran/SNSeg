@@ -48,13 +48,15 @@ The default setting is FALSE.}
 estimated change-point locations if est_cp_loc = TRUE}
 }
 \value{
-\code{SNSeg_Uni} returns a list of objects, including the type of
-parameter to be tested, the local window size to cover a change point, the
-estimated change-point locations, the confidence level and the critical value
-of the SN test. It also generates a time series segmentation plot when
-\code{plot_SN = TRUE}.
+\code{SNSeg_Uni} returns an S3 object of class "SNSeg_Uni" including
+the time series, the type of parameter to be tested, the local window size to
+cover a change point, the estimated change-point locations, the confidence level
+and the critical value of the SN test. It also generates a time series segmentation
+plot when \code{plot_SN = TRUE}.
 \describe{
-\item{\code{paras_to_test}}{a character, numeric value or vector of the
+\item{\code{ts}}{A numeric vector or two-dimensional matrix of the input
+time series.}
+\item{\code{paras_to_test}}{A character, numeric value, a function or vector of the
 parameter(s) used for the SN test.}
 \item{\code{grid_size}}{A numeric value of the window size.}
 \item{\code{SN_sweep_result}}{A list of matrices where each matrix
@@ -66,6 +68,18 @@ change-points.}
 \item{\code{confidence}}{Confidence level of SN test as a numeric value.}
 \item{\code{critical_value}}{Critical value of the SN-based test statistic.}
 }
+
+Users can apply the functions \code{summary.SN} to compute the parameter estimate
+of each segment separated by the detected change-points. An additional function
+\code{plot.SN} can be used to plot the time series with estimated change-points.
+Users can set the option \code{plot_SN = TRUE} or use the function \code{plot.SN}
+to plot the time series.
+
+It deserves to note that some change-points could be missing due to the constraint
+on \code{grid_size_scale} or related \code{grid_size} that \code{grid_size_scale}
+has a minimum value of 0.05. Therefore, SNCP claims no change-points within the
+first n\emph{\code{grid_size_scale} or the last n}\code{grid_size_scale} time points.
+This is a limitation of the function \code{SNSeg_Uni}.
 
 For more examples of \code{SNSeg_Uni} see the help vignette:
 \code{vignette("SNSeg", package = "SNSeg")}

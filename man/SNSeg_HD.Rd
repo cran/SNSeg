@@ -5,7 +5,15 @@
 \title{Self-normalization (SN) based change points estimation for high dimensional
 time series for changes in high-dimensional means (SNHD).}
 \usage{
-SNSeg_HD(ts, confidence = 0.9, grid_size_scale = 0.05, grid_size = NULL)
+SNSeg_HD(
+  ts,
+  confidence = 0.9,
+  grid_size_scale = 0.05,
+  grid_size = NULL,
+  plot_SN = FALSE,
+  est_cp_loc = TRUE,
+  n_plot = 5
+)
 }
 \arguments{
 \item{ts}{A high-dimensional time series represented as a matrix with p
@@ -25,12 +33,22 @@ range.}
 test. Since grid_size = n*grid_size_scale, where n is the length of time
 series, this function will compute the grid_size_scale by diving n from
 grid_size when it is not NULL.}
+
+\item{plot_SN}{Boolean value to plot the time series or not.
+The default setting is FALSE.}
+
+\item{est_cp_loc}{Boolean value to plot a red solid vertical line for
+estimated change-point locations if est_cp_loc = TRUE.}
+
+\item{n_plot}{Number of time series being plotted if plot_SN = TRUE.}
 }
 \value{
-SNSeg_HD returns a list of numeric objects, including the local window
-size to cover a change point, the estimated change-point locations, the
-confidence level and the critical value of the SN test.
+SNSeg_HD returns an S3 object of class "SNSeg_HD" including the time
+series, the local window size to cover a change point, the estimated change-point
+locations, the confidence level and the critical value of the SN test. It also
+generates time series segmentation plot when \code{plot_SN = TRUE}.
 \describe{
+\item{\code{ts}}{A numeric matrix of the input time series.}
 \item{\code{grid_size}}{A numeric value of the window size.}
 \item{\code{SN_sweep_result}}{A list of n matrices where each matrix
 consists of four columns: (1) SN-based test statistic for each change-point
@@ -41,6 +59,18 @@ change-points.}
 \item{\code{confidence}}{Confidence level of SN test as a numeric value.}
 \item{\code{critical_value}}{Critical value of the SN-based test statistic.}
 }
+
+Users can apply the functions \code{summary.SN} to compute the parameter estimate
+of each segment separated by the detected change-points. An additional function
+\code{plot.SN} can be used to plot the time series with estimated change-points.
+Users can set the option \code{plot_SN = TRUE} or use the function \code{plot.SN}
+to plot the time series.
+
+It deserves to note that some change-points could be missing due to the constraint
+on \code{grid_size_scale} or related \code{grid_size} that \code{grid_size_scale}
+has a minimum value of 0.05. Therefore, SNCP claims no change-points within the
+first n\emph{\code{grid_size_scale} or the last n}\code{grid_size_scale} time points.
+This is a limitation of the function \code{SNSeg_HD}.
 
 For more examples of \code{SNSeg_HD} see the help vignette:
 \code{vignette("SNSeg", package = "SNSeg")}

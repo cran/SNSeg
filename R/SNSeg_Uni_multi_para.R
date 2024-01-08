@@ -4,6 +4,7 @@ NULL
 
 #' @importFrom utils data
 #' @importFrom stats approx
+#' @importFrom stats acf
 #' @importFrom graphics par
 #' @importFrom graphics plot
 #' @importFrom graphics abline
@@ -122,12 +123,17 @@ SNSeg_Uni_multi_para <- function(ts, paras_to_test = c(0.9,0.95),
 
   if(plot_SN){
     plot(ts, xlab = "Time", ylab = "Value",
-         main="SN Segmentation plot")
+         main="SN Segmentation plot for Multi-Parameters")
     if(est_cp_loc){
       abline(v = SN_result, col = 'red')
     }
   }
-  return(list("paras_to_test" = paras_to_test, "grid_size" = grid_size,
-              "SN_sweep_result" = SN_sweep_result, "est_cp" = SN_result,
-              "confidence" = confidence, "critical_value" = critical_value))
+  final_result <- structure(
+    list(
+      ts = ts, paras_to_test = paras_to_test, grid_size = grid_size,
+      SN_sweep_result = SN_sweep_result, est_cp = SN_result,
+      confidence = confidence, critical_value = critical_value
+    ), class = 'SNSeg_Uni'
+  )
+  final_result
 }

@@ -44,9 +44,20 @@ result <- SNSeg_Uni(ts, paras_to_test = "mean", confidence = 0.9,
                     plot_SN = TRUE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (mean) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result)
+
+## -----------------------------------------------------------------------------
+print(result)
+
+## -----------------------------------------------------------------------------
+plot(result, cpts.col = 'red')
 
 ## -----------------------------------------------------------------------------
 set.seed(7)
@@ -54,13 +65,20 @@ ts <- MAR_Variance(2, "V1")
 ts <- ts[,2]
 # grid_size defined
 result <- SNSeg_Uni(ts, paras_to_test = "variance", confidence = 0.9,
-                    grid_size_scale = 0.05, grid_size = 67, 
-                    plot_SN = TRUE, est_cp_loc = TRUE)
+                    grid_size_scale = 0.05, grid_size = NULL, 
+                    plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (variance) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
 
 ## -----------------------------------------------------------------------------
 set.seed(7)
@@ -68,13 +86,20 @@ ts <- MAR_Variance(2, "A3")
 ts <- ts[,2]
 # grid_size defined
 result <- SNSeg_Uni(ts, paras_to_test = "acf", confidence = 0.9,
-          grid_size_scale = 0.05, grid_size = 92, plot_SN = TRUE,
+          grid_size_scale = 0.05, grid_size = 92, plot_SN = FALSE,
           est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (acf) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
 
 ## -----------------------------------------------------------------------------
 library(mvtnorm)
@@ -91,12 +116,19 @@ ts <- ts[1][[1]]
 # grid_size defined
 result <- SNSeg_Uni(ts, paras_to_test = "bivcor", confidence = 0.9,
                     grid_size_scale = 0.05, grid_size = 77, 
-                    plot_SN = TRUE, est_cp_loc = TRUE)
+                    plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (bivariate correlation) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
 
 ## -----------------------------------------------------------------------------
 library(truncnorm)
@@ -122,12 +154,55 @@ ts <- ts[,2]
 # test in 90% quantile
 result <- SNSeg_Uni(ts, paras_to_test = 0.9, confidence = 0.9,
                     grid_size_scale = 0.066, grid_size = NULL,
-                    plot_SN = TRUE, est_cp_loc = TRUE)
+                    plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (90th quantile) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
+
+## -----------------------------------------------------------------------------
+set.seed(7)
+n <- 500
+reptime <- 2
+cp_sets <- round(n*c(0,cumsum(c(0.5,0.25)),1))
+mean_shift <- c(0.4,0,0.4)
+rho <- -0.7
+ts <- MAR(n, reptime, rho)
+no_seg <- length(cp_sets)-1
+for(index in 1:no_seg){ # Mean shift
+  tau1 <- cp_sets[index]+1
+  tau2 <- cp_sets[index+1]
+  ts[tau1:tau2,] <- ts[tau1:tau2,] + mean_shift[index]
+}
+ts <- ts[,2]
+# set a general functional for the input 'paras_to_test'
+paras_to_test = function(ts){
+  mean(ts)
+}
+result.SNCP.general <- SNSeg_Uni(ts, paras_to_test = paras_to_test, 
+                                 confidence = 0.9, grid_size_scale = 0.05, 
+                                 grid_size = NULL, plot_SN = FALSE, 
+                                 est_cp_loc = TRUE)
+# Estimated change-point locations
+result.SNCP.general$est_cp
+# Parameter estimates (general functional) of each segment
+SNSeg_estimate(result.SNCP.general)
+# plot the SN-based test statistic
+SN_stat <- max_SNsweep(result.SNCP.general, plot_SN = TRUE, est_cp_loc = TRUE,
+                       critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result.SNCP.general)
+print(result.SNCP.general)
+plot(result.SNCP.general, cpts.col = 'red')
 
 ## -----------------------------------------------------------------------------
 set.seed(7)
@@ -165,15 +240,24 @@ result <- SNSeg_Uni(ts, paras_to_test = c(0.9,'variance', "acf"),
                     est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+
+## -----------------------------------------------------------------------------
 # Test in 60th quantile, mean, variance and acf with grid_size defined
-result <- SNSeg_Uni(ts, paras_to_test = c(0.6, 'mean', "variance",   
+result.last <- SNSeg_Uni(ts, paras_to_test = c(0.6, 'mean', "variance",   
                     "acf"), confidence = 0.9, grid_size_scale = 0.05,
-                    grid_size = 83, plot_SN = TRUE, est_cp_loc = TRUE)
+                    grid_size = 83, plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
-result$est_cp
+result.last$est_cp
+# Parameter estimates (of the last example) of each segment
+SNSeg_estimate(result.last)
 # SN-based test statistic segmentation plot
-SN_stst <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
+SN_stat <- max_SNsweep(result.last, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result.last)
+print(result.last)
+plot(result.last, cpts.col = 'red')
 
 ## -----------------------------------------------------------------------------
 # Please run this function before running examples:
@@ -207,15 +291,25 @@ ts <- ts[1][[1]]
 
 # grid_size undefined
 result <- SNSeg_Multi(ts, paras_to_test = "mean", confidence = 0.95,
-                      grid_size_scale = 0.079, grid_size = NULL)
+                      grid_size_scale = 0.079, grid_size = NULL,
+                      plot_SN = FALSE, est_cp_loc = TRUE)
 # grid_size defined
 result <- SNSeg_Multi(ts, paras_to_test = "mean", confidence = 0.99,
-                      grid_size_scale = 0.05, grid_size = 65)
+                      grid_size_scale = 0.05, grid_size = 65,
+                      plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (multivariate mean) of each segment
+SNSeg_estimate(result)
 # SN-based test statistic segmentation plot
-SN_stst <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
+SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result)
+print(result)
+par(mfrow=c(2,3))
+plot(result, cpts.col = 'red')
 
 ## -----------------------------------------------------------------------------
 library(mvtnorm)
@@ -245,16 +339,25 @@ ts <- ts[[1]]
 # grid_size undefined
 result <- SNSeg_Multi(ts, paras_to_test = "covariance", 
                       confidence = 0.9, grid_size_scale = 0.05, 
-                      grid_size = NULL)
+                      grid_size = NULL, plot_SN = FALSE, est_cp_loc = FALSE)
 # grid_size defined
 result <- SNSeg_Multi(ts, paras_to_test = "covariance", 
                       confidence = 0.9, grid_size_scale = 0.05, 
-                      grid_size = 81)
+                      grid_size = 81, plot_SN = FALSE,
+                      est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (covariance estimate) of each segment
+SNSeg_estimate(result)
 # SN-based test statistic segmentation plot
-SN_stst <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
+SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result)
+print(result)
+par(mfrow=c(1,1))
+plot(result, cpts.col = 'red')
 
 ## -----------------------------------------------------------------------------
 n <- 600
@@ -273,16 +376,25 @@ for(index in 1:no_seg){ # Mean shift
   ts[tau1:tau2,1:num_entry] <- ts[tau1:tau2,1:num_entry] +
     mean_shift[index] # sparse change
 }
-
+# SN segmentation plot (plot the first 3 time series)
 # grid_size undefined
 result <- SNSeg_HD(ts, confidence = 0.9, grid_size_scale = 0.05,
-                   grid_size = NULL)
+                   grid_size = NULL, plot_SN = FALSE, est_cp_loc = TRUE,
+                   n_plot = 3)
 # grid_size defined
 result <- SNSeg_HD(ts, confidence = 0.9, grid_size_scale  = 0.05,
-                   grid_size = 52)
+                   grid_size = 52, plot_SN = FALSE, est_cp_loc = TRUE,
+                   n_plot = 3)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (high-dimensional means) of each segment
+summary.stat <- SNSeg_estimate(result)
 # SN-based test statistic segmentation plot
-SN_stst <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
+SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+
+## -----------------------------------------------------------------------------
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
 

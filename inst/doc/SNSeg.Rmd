@@ -51,6 +51,13 @@ To visualize the computed SN-based test statistic at each time point, users can 
 
 `max_SNsweep` also returns the SN-based test statistic for each time point. A large number of test statistics in the output can be messy for users who only seek to generate a plot. To hide the test statistics output, users can create an arbitrary variable name and set it to the `max_SNsweep` function, e.g., `SN_stat <- max_SNsweep(...)`. 
 
+## Parameter Estimates of Each Segment Separated by the Detected Change-Points: `SNSeg_estimate`
+The function `SNSeg_estimate` allows users to compute the parameter estimates (e.g., mean, variance, acf, quantile, etc.) of each of the segments separated by the estimated change-points. To use this function, users should use the output of the functions `SNSeg_Uni`, `SNSeg_Multi` and `SNSeg_HD` as the input of `SNSeg_estimate`.
+
+## S3 methods: summary, print and plot
+
+The typical S3 methods `summary`, `print` and `plot` are available to `SNSeg_Uni`, `SNSeg_Multi` and `SNSeg_HD` objects. The `summary` method displays the parameter to be tested, the estimated change-point amount and locations, the `grid_size`, confidence level as well as the critical value of the SN-based test. The `print` method shows the change-point locations. The `plot` method plots the time series, and similar to the argument `plot_SN = TRUE`, the `plot` method allows users to generate time series segmentation plot(s) with the estimated change-point locations. It also provides `n_plot` option to allow users to generate any number of plots they want. Users can apply their preferred color of the change-point(s) within the plot(s) by setting `cpts.col` to any color.
+
 We then provide the examples of the functions `SNSeg_Uni`, `SNSeg_Multi` and `SNSeg_HD`. 
 
 ## Examples of `SNSeg_Uni`: 
@@ -59,8 +66,9 @@ The function `SNSeg_Uni` detect change-points for a univariate time series based
 
 * For a univariate time series, the input argument `paras_to_test` allows one or a combination of multiple parameters from "mean", "variance", "acf" and a numeric quantile value between 0 and 1. For instance, to test the change in autocorrelation and 80th quantile, users should set `paras_to_test` to c('acf', 0.8). 
 * To test the change in correlation between two univariate time series, the input time series must be two-dimensional and `paras_to_test` should be set to `bivcor`.
+* Users can also set `paras_to_test` using their own parameters. In this case, the input of `paras_to_test` needs to be a function which returns a numeric value.  
 
-We then provide examples for different cases:
+We provide examples for different cases:
 
 ```{r}
 # Please run the following function before running examples:
@@ -100,10 +108,28 @@ result <- SNSeg_Uni(ts, paras_to_test = "mean", confidence = 0.9,
                     plot_SN = TRUE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (mean) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
 ```
+
+We then show how to use the S3 methods `summary`, `print` and `plot`.
+
+```{r}
+summary(result)
+```
+
+```{r}
+print(result)
+```
+
+```{r}
+plot(result, cpts.col = 'red')
+```
+
+We can see both the `plot_SN = TRUE` option and the `plot.SN` function generates the same plot. Users can select any choice based on their preferences. The class of the argument `result` is `SNSeg_Uni`.
 
 ### Segmentation for Variance
 ```{r}
@@ -112,13 +138,21 @@ ts <- MAR_Variance(2, "V1")
 ts <- ts[,2]
 # grid_size defined
 result <- SNSeg_Uni(ts, paras_to_test = "variance", confidence = 0.9,
-                    grid_size_scale = 0.05, grid_size = 67, 
-                    plot_SN = TRUE, est_cp_loc = TRUE)
+                    grid_size_scale = 0.05, grid_size = NULL, 
+                    plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (variance) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+```
+
+```{r}
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
 ```
 
 ### Segmentation for Autocorrelation
@@ -128,13 +162,21 @@ ts <- MAR_Variance(2, "A3")
 ts <- ts[,2]
 # grid_size defined
 result <- SNSeg_Uni(ts, paras_to_test = "acf", confidence = 0.9,
-          grid_size_scale = 0.05, grid_size = 92, plot_SN = TRUE,
+          grid_size_scale = 0.05, grid_size = 92, plot_SN = FALSE,
           est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (acf) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+```
+
+```{r}
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
 ```
 
 ### Segmentation for bivariate correlation
@@ -153,12 +195,20 @@ ts <- ts[1][[1]]
 # grid_size defined
 result <- SNSeg_Uni(ts, paras_to_test = "bivcor", confidence = 0.9,
                     grid_size_scale = 0.05, grid_size = 77, 
-                    plot_SN = TRUE, est_cp_loc = TRUE)
+                    plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (bivariate correlation) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+```
+
+```{r}
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
 ```
 
 ### Segmentation for quantile
@@ -186,14 +236,60 @@ ts <- ts[,2]
 # test in 90% quantile
 result <- SNSeg_Uni(ts, paras_to_test = 0.9, confidence = 0.9,
                     grid_size_scale = 0.066, grid_size = NULL,
-                    plot_SN = TRUE, est_cp_loc = TRUE)
+                    plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (90th quantile) of each segment
+SNSeg_estimate(result)
 # plot the SN-based test statistic
 SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
 ```
 
+```{r}
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
+```
+
+### Test in a general functional
+```{r}
+set.seed(7)
+n <- 500
+reptime <- 2
+cp_sets <- round(n*c(0,cumsum(c(0.5,0.25)),1))
+mean_shift <- c(0.4,0,0.4)
+rho <- -0.7
+ts <- MAR(n, reptime, rho)
+no_seg <- length(cp_sets)-1
+for(index in 1:no_seg){ # Mean shift
+  tau1 <- cp_sets[index]+1
+  tau2 <- cp_sets[index+1]
+  ts[tau1:tau2,] <- ts[tau1:tau2,] + mean_shift[index]
+}
+ts <- ts[,2]
+# set a general functional for the input 'paras_to_test'
+paras_to_test = function(ts){
+  mean(ts)
+}
+result.SNCP.general <- SNSeg_Uni(ts, paras_to_test = paras_to_test, 
+                                 confidence = 0.9, grid_size_scale = 0.05, 
+                                 grid_size = NULL, plot_SN = FALSE, 
+                                 est_cp_loc = TRUE)
+# Estimated change-point locations
+result.SNCP.general$est_cp
+# Parameter estimates (general functional) of each segment
+SNSeg_estimate(result.SNCP.general)
+# plot the SN-based test statistic
+SN_stat <- max_SNsweep(result.SNCP.general, plot_SN = TRUE, est_cp_loc = TRUE,
+                       critical_loc = TRUE)
+```
+
+```{r}
+summary(result.SNCP.general)
+print(result.SNCP.general)
+plot(result.SNCP.general, cpts.col = 'red')
+```
 
 ### Test in multiple parameters
 ```{r}
@@ -232,18 +328,29 @@ result <- SNSeg_Uni(ts, paras_to_test = c(0.9,'variance', "acf"),
                     est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+```
+
+```{r}
 # Test in 60th quantile, mean, variance and acf with grid_size defined
-result <- SNSeg_Uni(ts, paras_to_test = c(0.6, 'mean', "variance",   
+result.last <- SNSeg_Uni(ts, paras_to_test = c(0.6, 'mean', "variance",   
                     "acf"), confidence = 0.9, grid_size_scale = 0.05,
-                    grid_size = 83, plot_SN = TRUE, est_cp_loc = TRUE)
+                    grid_size = 83, plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
-result$est_cp
+result.last$est_cp
+# Parameter estimates (of the last example) of each segment
+SNSeg_estimate(result.last)
 # SN-based test statistic segmentation plot
-SN_stst <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
+SN_stat <- max_SNsweep(result.last, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
 ```
 
-## Examples: `SNSeg_Mulni`
+```{r}
+summary(result.last)
+print(result.last)
+plot(result.last, cpts.col = 'red')
+```
+
+## Examples: `SNSeg_Multi`
 The function `SNSeg_Multi` detects change-points for multivariate time series based on the change in multivariate means or covariances. Users can set `paras_to_test` to `mean` or `covariance` for change-points estimation. 
 
 * The dimension of parameters to be tested must be at most ten. If the parameter is `mean`, the dimension is equivalent to the number of time series. If the parameter is `covariance`, the dimension is equivalent to the number of unknown parameters within the covariance matrix.
@@ -284,15 +391,26 @@ ts <- ts[1][[1]]
 
 # grid_size undefined
 result <- SNSeg_Multi(ts, paras_to_test = "mean", confidence = 0.95,
-                      grid_size_scale = 0.079, grid_size = NULL)
+                      grid_size_scale = 0.079, grid_size = NULL,
+                      plot_SN = FALSE, est_cp_loc = TRUE)
 # grid_size defined
 result <- SNSeg_Multi(ts, paras_to_test = "mean", confidence = 0.99,
-                      grid_size_scale = 0.05, grid_size = 65)
+                      grid_size_scale = 0.05, grid_size = 65,
+                      plot_SN = FALSE, est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (multivariate mean) of each segment
+SNSeg_estimate(result)
 # SN-based test statistic segmentation plot
-SN_stst <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
+SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+```
+
+```{r}
+summary(result)
+print(result)
+par(mfrow=c(2,3))
+plot(result, cpts.col = 'red')
 ```
 
 ### Segmentation for Multivariate Covariance
@@ -324,16 +442,26 @@ ts <- ts[[1]]
 # grid_size undefined
 result <- SNSeg_Multi(ts, paras_to_test = "covariance", 
                       confidence = 0.9, grid_size_scale = 0.05, 
-                      grid_size = NULL)
+                      grid_size = NULL, plot_SN = FALSE, est_cp_loc = FALSE)
 # grid_size defined
 result <- SNSeg_Multi(ts, paras_to_test = "covariance", 
                       confidence = 0.9, grid_size_scale = 0.05, 
-                      grid_size = 81)
+                      grid_size = 81, plot_SN = FALSE,
+                      est_cp_loc = TRUE)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (covariance estimate) of each segment
+SNSeg_estimate(result)
 # SN-based test statistic segmentation plot
-SN_stst <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
+SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
+```
+
+```{r}
+summary(result)
+print(result)
+par(mfrow=c(1,1))
+plot(result, cpts.col = 'red')
 ```
 
 ## Examples: `SNSeg_HD`
@@ -356,18 +484,27 @@ for(index in 1:no_seg){ # Mean shift
   ts[tau1:tau2,1:num_entry] <- ts[tau1:tau2,1:num_entry] +
     mean_shift[index] # sparse change
 }
-
+# SN segmentation plot (plot the first 3 time series)
 # grid_size undefined
 result <- SNSeg_HD(ts, confidence = 0.9, grid_size_scale = 0.05,
-                   grid_size = NULL)
+                   grid_size = NULL, plot_SN = FALSE, est_cp_loc = TRUE,
+                   n_plot = 3)
 # grid_size defined
 result <- SNSeg_HD(ts, confidence = 0.9, grid_size_scale  = 0.05,
-                   grid_size = 52)
+                   grid_size = 52, plot_SN = FALSE, est_cp_loc = TRUE,
+                   n_plot = 3)
 # Estimated change-point locations
 result$est_cp
+# Parameter estimates (high-dimensional means) of each segment
+summary.stat <- SNSeg_estimate(result)
 # SN-based test statistic segmentation plot
-SN_stst <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
+SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
                        critical_loc = TRUE)
 ```
 
-
+```{r}
+summary(result)
+print(result)
+plot(result, cpts.col = 'red')
+```
+We note that only the first three time series were plotted by setting `n_plot = 3`.

@@ -4,6 +4,7 @@ NULL
 
 #' @importFrom utils data
 #' @importFrom stats approx
+#' @importFrom stats cov
 #' @importFrom mvtnorm rmvnorm
 NULL
 
@@ -30,11 +31,17 @@ NULL
 #' test. Since grid_size = n*grid_size_scale, where n is the length of time
 #' series, this function will compute the grid_size_scale by diving n from
 #' grid_size when it is not NULL.
-#' @return \code{SNSeg_Multi} returns a list of objects, including the type of
-#' parameter to be tested, the local window size to cover a change point, the
-#' estimated change-point locations, the confidence level and the critical value
-#' of the SN test.
+#' @param plot_SN  Boolean value to plot the time series or not.
+#' The default setting is FALSE.
+#' @param est_cp_loc Boolean value to plot a red solid vertical line for
+#' estimated change-point locations if est_cp_loc = TRUE
+#' @return \code{SNSeg_Multi} returns an S3 object of class "SNSeg_Multi" including
+#' the time series, the type of parameter to be tested, the local window size to
+#' cover a change point, the estimated change-point locations, the confidence level
+#' and the critical value of the SN test. It also generates time series segmentation
+#' plot when \code{plot_SN = TRUE}.
 #' \describe{
+#'   \item{\code{ts}}{A numeric matrix of the input time series.}
 #'   \item{\code{paras_to_test}}{the parameter used for the SN test as character.}
 #'   \item{\code{grid_size}}{A numeric value of the window size.}
 #'   \item{\code{SN_sweep_result}}{A list of n matrices where each matrix
@@ -46,6 +53,18 @@ NULL
 #'   \item{\code{confidence}}{Confidence level of SN test as a numeric value.}
 #'   \item{\code{critical_value}}{Critical value of the SN-based test statistic.}
 #' }
+#'
+#' Users can apply the functions \code{summary.SN} to compute the parameter estimate
+#' of each segment separated by the detected change-points. An additional function
+#' \code{plot.SN} can be used to plot the time series with estimated change-points.
+#' Users can set the option \code{plot_SN = TRUE} or use the function \code{plot.SN}
+#' to plot the time series.
+#'
+#' It deserves to note that some change-points could be missing due to the constraint
+#' on \code{grid_size_scale} or related \code{grid_size} that \code{grid_size_scale}
+#' has a minimum value of 0.05. Therefore, SNCP claims no change-points within the
+#' first n*\code{grid_size_scale} or the last n*\code{grid_size_scale} time points.
+#' This is a limitation of the function \code{SNSeg_Multi}.
 #'
 #' For more examples of \code{SNSeg_Multi} see the help vignette:
 #' \code{vignette("SNSeg", package = "SNSeg")}
@@ -83,9 +102,10 @@ NULL
 #' # vignette("SNSeg", package = "SNSeg")
 #' }
 #'
-#' @export SNSeg_Multi
+#' @export
 SNSeg_Multi <- function(ts, paras_to_test = "mean", confidence = 0.9,
-                        grid_size_scale = 0.05, grid_size = NULL){
+                        grid_size_scale = 0.05, grid_size = NULL,
+                        plot_SN = FALSE, est_cp_loc = TRUE){
 
   if(is.null(ts))
   {stop("Input of ts is missing!")}
@@ -193,7 +213,22 @@ SNSeg_Multi <- function(ts, paras_to_test = "mean", confidence = 0.9,
     SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
   }
 
-  return(list("paras_to_test" = paras_to_test, "grid_size" = grid_size, "confidence" = confidence,
-              "est_cp" = SN_result, "SN_sweep_result" = SN_sweep_result,
-              "critical_value" = critical_value))
+  if(plot_SN == TRUE){
+    for(i in 1:dim(ts)[1]){
+      plot(ts[i,], xlab = "Time", ylab = "Value",
+           main=paste0("SN Segmentation plot for Time Series ",i,""))
+      if(est_cp_loc){
+        abline(v = SN_result, col = 'red')
+      }
+    }
+  }
+
+  final_result <- structure(
+    list(
+      ts = ts, paras_to_test = paras_to_test, grid_size = grid_size,
+      SN_sweep_result = SN_sweep_result, est_cp = SN_result,
+      confidence = confidence, critical_value = critical_value
+    ), class = 'SNSeg_Multi'
+  )
+  final_result
 }
