@@ -26,7 +26,10 @@ NULL
 #' The default setting is FALSE.
 #' @param est_cp_loc Boolean value to plot a red solid vertical line for
 #' estimated change-point locations if est_cp_loc = TRUE.
-#' @param n_plot Number of time series being plotted if plot_SN = TRUE.
+#' @param ts_index The index number(s) of the univariate time series to be plotted.
+#' Users should enter a positive integer or a vector of positive integers that are
+#' no greater than the dimension of the input time series. The default is the
+#' first 5 time series, i.e., \code{ts_index = c(1:5)}.
 #' @return SNSeg_HD returns an S3 object of class "SNSeg_HD" including the time
 #' series, the local window size to cover a change point, the estimated change-point
 #' locations, the confidence level and the critical value of the SN test. It also
@@ -91,7 +94,7 @@ NULL
 #' @export
 SNSeg_HD <- function(ts, confidence = 0.9, grid_size_scale = 0.05,
                      grid_size = NULL, plot_SN = FALSE, est_cp_loc = TRUE,
-                     n_plot = 5){
+                     ts_index = c(1:5)){
   if(is.null(ts))
   {stop("Input of ts is missing!")}
   if(dim(ts)[1]<dim(ts)[2]){
@@ -175,7 +178,7 @@ SNSeg_HD <- function(ts, confidence = 0.9, grid_size_scale = 0.05,
   SN_result <- SN_divisive_path(start=1, end=n, grid_size, SN_sweep_result, critical_value=critical_value)
 
   if(plot_SN == TRUE){
-    for(i in 1:n_plot){
+    for(i in ts_index){
       plot(ts[,i], xlab = "Time", ylab = "Value",
            main=paste0("SN Segmentation plot for Time Series ",i,""))
       if(est_cp_loc){

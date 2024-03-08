@@ -6,7 +6,10 @@
 #' @param x a \code{SNSeg_HD} object
 #' @param cpts.col a specification for the color of the vertical lines at
 #' the change point estimators, see \link[graphics]{par}
-#' @param n_plot the number of time series to be plotted. The default value is 5.
+#' @param ts_index The index number(s) of the univariate time series to be plotted.
+#' Users should enter a positive integer or a vector of positive integers that are
+#' no greater than the dimension of the input time series. The default is the
+#' first 5 time series, i.e., \code{ts_index = c(1:5)}.
 #' @param ... additional graphical arguments, see \link[graphics]{plot}
 #' and \link[graphics]{abline}
 #' @details
@@ -34,18 +37,18 @@
 #' # grid_size defined
 #' result <- SNSeg_HD(ts, confidence = 0.9, grid_size_scale  = 0.05,
 #'                    grid_size = 40)
-#' # plot the first three time series
-#' plot(result, cpts.col = 'red', n_plot = 3)
+#' # plot the 1st, 3rd and 5th time series
+#' plot(result, cpts.col = 'red', ts_index = c(1,3,5))
 #' }
 #'
 #' @importFrom graphics abline plot
 #' @export
-plot.SNSeg_HD <- function(x, cpts.col='red', n_plot = 5, ...) {
+plot.SNSeg_HD <- function(x, cpts.col='red', ts_index = c(1:5), ...) {
   ts <- x$ts
   if(dim(ts)[1]>dim(ts)[2]){
     ts <- t(ts)
   }
-  for(i in 1:n_plot){
+  for(i in 1:ts_index){
     plot(ts[i,], type='l', xlab = "Time", ylab = "Value",
          main=paste("SN Segmentation plot for Time Series", i))
     abline(h=x$est_cp, col=cpts.col)

@@ -5,7 +5,7 @@
 \title{Plotting the output for high-dimensional time series with dimension greater
 than 10}
 \usage{
-\method{plot}{SNSeg_HD}(x, cpts.col = "red", n_plot = 5, ...)
+\method{plot}{SNSeg_HD}(x, cpts.col = "red", ts_index = c(1:5), ...)
 }
 \arguments{
 \item{x}{a \code{SNSeg_HD} object}
@@ -13,7 +13,10 @@ than 10}
 \item{cpts.col}{a specification for the color of the vertical lines at
 the change point estimators, see \link[graphics]{par}}
 
-\item{n_plot}{the number of time series to be plotted. The default value is 5.}
+\item{ts_index}{The index number(s) of the univariate time series to be plotted.
+Users should enter a positive integer or a vector of positive integers that are
+no greater than the dimension of the input time series. The default is the
+first 5 time series, i.e., \code{ts_index = c(1:5)}.}
 
 \item{...}{additional graphical arguments, see \link[graphics]{plot}
 and \link[graphics]{abline}}
@@ -47,8 +50,8 @@ for(index in 1:no_seg){
 # grid_size defined
 result <- SNSeg_HD(ts, confidence = 0.9, grid_size_scale  = 0.05,
                    grid_size = 40)
-# plot the first three time series
-plot(result, cpts.col = 'red', n_plot = 3)
+# plot the 1st, 3rd and 5th time series
+plot(result, cpts.col = 'red', ts_index = c(1,3,5))
 }
 
 }

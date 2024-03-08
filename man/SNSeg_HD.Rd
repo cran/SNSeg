@@ -12,7 +12,7 @@ SNSeg_HD(
   grid_size = NULL,
   plot_SN = FALSE,
   est_cp_loc = TRUE,
-  n_plot = 5
+  ts_index = c(1:5)
 )
 }
 \arguments{
@@ -40,7 +40,10 @@ The default setting is FALSE.}
 \item{est_cp_loc}{Boolean value to plot a red solid vertical line for
 estimated change-point locations if est_cp_loc = TRUE.}
 
-\item{n_plot}{Number of time series being plotted if plot_SN = TRUE.}
+\item{ts_index}{The index number(s) of the univariate time series to be plotted.
+Users should enter a positive integer or a vector of positive integers that are
+no greater than the dimension of the input time series. The default is the
+first 5 time series, i.e., \code{ts_index = c(1:5)}.}
 }
 \value{
 SNSeg_HD returns an S3 object of class "SNSeg_HD" including the time

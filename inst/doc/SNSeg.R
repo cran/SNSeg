@@ -376,15 +376,15 @@ for(index in 1:no_seg){ # Mean shift
   ts[tau1:tau2,1:num_entry] <- ts[tau1:tau2,1:num_entry] +
     mean_shift[index] # sparse change
 }
-# SN segmentation plot (plot the first 3 time series)
-# grid_size undefined
+# SN segmentation plot 
+# grid_size undefined (plot the first 3 time series)
 result <- SNSeg_HD(ts, confidence = 0.9, grid_size_scale = 0.05,
                    grid_size = NULL, plot_SN = FALSE, est_cp_loc = TRUE,
-                   n_plot = 3)
-# grid_size defined
+                   ts_index = c(1:3))
+# grid_size defined (plot the 1st, 3rd and 5th time series)
 result <- SNSeg_HD(ts, confidence = 0.9, grid_size_scale  = 0.05,
                    grid_size = 52, plot_SN = FALSE, est_cp_loc = TRUE,
-                   n_plot = 3)
+                   ts_index = c(1,3,5))
 # Estimated change-point locations
 result$est_cp
 # Parameter estimates (high-dimensional means) of each segment
@@ -396,5 +396,5 @@ SN_stat <- max_SNsweep(result, plot_SN = TRUE, est_cp_loc = TRUE,
 ## -----------------------------------------------------------------------------
 summary(result)
 print(result)
-plot(result, cpts.col = 'red')
+plot(result, cpts.col = 'red', ts_index = c(1:3))
 
